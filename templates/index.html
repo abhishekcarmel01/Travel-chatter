@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Assistant</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .chatbox { width: 100%; max-width: 600px; margin: auto; }
+        .chatbox input { width: 80%; padding: 10px; }
+        .chatbox button { padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>AI Travel Assistant</h1>
+    <div class="chatbox">
+        <div id="chat-log">
+            <p>Welcome! Where are you planning to travel?</p>
+        </div>
+        <input type="text" id="user-input" placeholder="Enter your response...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        function sendMessage() {
+            let userInput = document.getElementById("user-input").value;
+            document.getElementById("chat-log").innerHTML += "<p><strong>You:</strong> " + userInput + "</p>";
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_input: userInput })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("chat-log").innerHTML += "<p><strong>Bot:</strong> " + data.bot_response + "</p>";
+                document.getElementById("user-input").value = ''; 
+            });
+        }
+    </script>
+</body>
+</html>
