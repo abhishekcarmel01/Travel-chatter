@@ -25,7 +25,7 @@
         function sendMessage() {
             let userInput = document.getElementById("user-input").value;
             document.getElementById("chat-log").innerHTML += "<p><strong>You:</strong> " + userInput + "</p>";
-
+    
             fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -33,10 +33,12 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById("chat-log").innerHTML += "<p><strong>Bot:</strong> " + data.bot_response + "</p>";
+                let formattedResponse = data.bot_response.replace(/\n/g, "<br>"); 
+                document.getElementById("chat-log").innerHTML += "<p><strong>Bot:</strong><br>" + formattedResponse + "</p>";
                 document.getElementById("user-input").value = ''; 
             });
         }
     </script>
+    
 </body>
 </html>
