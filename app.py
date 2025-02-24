@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 import ollama  
+from fais_test import travel_embeddings, query_input
 
 app = Flask(__name__)
 
@@ -18,8 +19,11 @@ def call_model(prompt):
 @app.route('/chat', methods=['POST'])
 def chat():
     user_input = request.json.get("user_input")
+    index, travel_data = travel_embeddings(user_input)
+    res=query_input(index, travel_data, user_input)
     #print(f"User input: {user_input}")
-    prompt = f"Generate a detailed travel itinerary based on this location : {user_input}."
+    prompt = (f"Generate a detailed travel itinerary for {user_input}. "
+              f"Include information about this attraction: {res}")
     bot_response = call_model(prompt)
     return jsonify({'bot_response': bot_response})
 
