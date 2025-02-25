@@ -18,16 +18,15 @@ def get_place_info(place_name):
     main_url="https://api.opentripmap.com/0.1/en/places/radius"
     params = {
         "radius": 10000,
-        "kinds": "museums, monuments, parks, churches, art, architecture, history, culture",
+        "kinds": ["museums", "parks", "theatres", "zoo", "amusement_parks", "aquariums", "castles", "churches", "historical_places", "monuments", "mountains", "museums", "palaces", "planetariums", "rivers", "squares", "temples", "towers", "waterfalls"],
         "lon": lon,
         "lat": lat,
         "limit": 5,
         "apikey": OPENTRIPMAP_API_KEY
     }
-    #response.raise_for_status()
-    #print(response.json())
     place_response = requests.get(main_url, params=params)
+    # print(place_response.json())
     return place_response.json()
 
 # if __name__ == "__main__":
-#     get_place_info("London")
+#   get_place_info("London")

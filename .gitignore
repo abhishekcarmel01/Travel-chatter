@@ -1,0 +1,9 @@
+travel/
+
+.env
+
+test_travel_index.faiss
+
+openweather.py
+
+__pycache__/

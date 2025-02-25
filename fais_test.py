@@ -3,14 +3,16 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from opentrip import get_place_info
 
+model = SentenceTransformer("all-MiniLM-L6-v2")
 def travel_embeddings(city):
-    model = SentenceTransformer("all-MiniLM-L6-v2")
     travel_data = []
     places = get_place_info(city)
-    for place in places:
-        name=place.get("name", "unknown")
-        kind=place.get("kinds","unknown")
-        description= f"{city}: {name}, Category: {kind}."
+    features=places.get("features")
+    for feature in features:
+        properties=feature.get("properties")
+        name=properties.get("name")
+        kind=properties.get("kinds")
+        description= f"{name}, Category: {kind}."
         travel_data.append(
             {
                 "city": city,
@@ -27,11 +29,10 @@ def travel_embeddings(city):
     return index, travel_data
 
 def query_input(index, travel_data, query_text):
-    model = SentenceTransformer("all-MiniLM-L6-v2")
     query_embedding = model.encode([query_text])
-    k = 1  
+    k = 5  
     distances, indices = index.search(np.array(query_embedding), k)
-    return travel_data[indices[0][0]]["description"]   
+    return [travel_data[i]["description"] for i in indices[0]]
 
 # if __name__ == "__main__":
 
