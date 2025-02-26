@@ -1,13 +1,15 @@
-import faiss
-import numpy as np
+import chromadb
 from sentence_transformers import SentenceTransformer
 from opentrip import get_place_info
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 def travel_embeddings(city):
     travel_data = []
-    places = get_place_info(city)
-    features=places.get("features")
+    features=[]
+    kinds=["accomodations", "architecture", "cultural", "natural", "religion", "banks", "foods", "shops", "transport"]
+    for kind in kinds:
+        response = get_place_info(city, kind)
+        features.extend(response.get("features", []))
     for feature in features:
         properties=feature.get("properties")
         name=properties.get("name")
@@ -22,17 +24,23 @@ def travel_embeddings(city):
 
     descriptions = [data["description"] for data in travel_data]
     embeddings = model.encode(descriptions)
-    dimension = embeddings.shape[1] # 1 dimensional array
-    index = faiss.IndexFlatL2(dimension) # L2 is Euclidean distance is used
-    index.add(np.array(embeddings))
-    faiss.write_index(index, "test_travel_index.faiss")
-    return index, travel_data
+    # dimension = embeddings.shape[1] # 1 dimensional array
+    # index = faiss.IndexFlatL2(dimension) # L2 is Euclidean distance is used
+    # index.add(np.array(embeddings))
+    # faiss.write_index(index, "test_travel_index.faiss")
+    # return index, travel_data
+    client = chromadb.Client()
+    collection = client.create_collection(name="travel_data")
+    collection.add(documents=descriptions, embeddings=embeddings)
+    return collection, travel_data
 
-def query_input(index, travel_data, query_text):
+def query_input(collection, query_text):
     query_embedding = model.encode([query_text])
-    k = 5  
-    distances, indices = index.search(np.array(query_embedding), k)
-    return [travel_data[i]["description"] for i in indices[0]]
+    # k = 5  
+    # distances, indices = index.search(np.array(query_embedding), k)
+    # return [travel_data[i]["description"] for i in indices[0]]
+    results = collection.query(query_embeddings=query_embedding, n_results=5)
+    return results['documents'][0]
 
 # if __name__ == "__main__":
 

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 OPENTRIPMAP_API_KEY = os.getenv("OPENTRIPMAP_API_KEY")
 
-def get_place_info(place_name):
+def get_place_info(place_name,kind):
     url = "https://api.opentripmap.com/0.1/en/places/geoname"
     params = {
         "name": place_name,
@@ -17,16 +17,16 @@ def get_place_info(place_name):
     lon=data.get("lon")
     main_url="https://api.opentripmap.com/0.1/en/places/radius"
     params = {
-        "radius": 10000,
-        "kinds": ["museums", "parks", "theatres", "zoo", "amusement_parks", "aquariums", "castles", "churches", "historical_places", "monuments", "mountains", "museums", "palaces", "planetariums", "rivers", "squares", "temples", "towers", "waterfalls"],
+        "radius": 30000,
+        "kinds": kind,
         "lon": lon,
         "lat": lat,
-        "limit": 5,
+        "limit": 3,
         "apikey": OPENTRIPMAP_API_KEY
     }
     place_response = requests.get(main_url, params=params)
-    # print(place_response.json())
+    #print(place_response.json())
     return place_response.json()
 
 # if __name__ == "__main__":
-#   get_place_info("London")
+#    get_place_info("London")
