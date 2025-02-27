@@ -1,14 +1,29 @@
 from flask import Flask, request, jsonify, render_template
 import ollama  
-from fais_test import travel_embeddings, query_input
+from chroma import travel_embeddings, query_input
 import json
+from dotenv import load_dotenv
+import os
+from flask_session import Session
+
+load_dotenv()
+SECRET_KEY=os.getenv("FLASK_SECRET_KEY")
 
 app = Flask(__name__)
+app.config('SECRET_KEY')=SECRET_KEY
+app.config('sESSION_TYPE')='filesystem'
+Session(app)
 
 @app.route('/')
 def home():
+    Session['history']=[]
+    Session['travel_data']=[]
     return render_template('index.html')
 
+def initial_prompt(res):
+    return( "You are a travel assistant that will build travel iternaries based on user's needs"
+           f"Include the following attractions: {res}."
+           )
 def extract(user_input):
     extract_prompt=("Extract the following details from the user's travel request: destination, budget "
         "(e.g., 'luxury', 'budget-friendly'), duration (e.g., '5 days'), and trip type "
@@ -27,6 +42,10 @@ def extract(user_input):
             "trip_type": "Unknown"
         }
     return details
+def build_prompt(conv_history,user_prompt):
+    history="\n".join(conv_history)
+    prompt=f"{history}\nUser: {user_prompt}\nBot:"
+    return prompt
 
 def call_model(prompt):
     try:
@@ -39,15 +58,19 @@ def call_model(prompt):
 @app.route('/chat', methods=['POST'])
 def chat():
     user_input = request.json.get("user_input")
-    details=extract(user_input)
-    index, travel_data = travel_embeddings(details['destination'])
-    res=query_input(index, travel_data, details['destination'])
+    conv_history = Session.get('history', [])
+    travel_data = Session.get('travel_data', [])
+    if not travel_data or user_input.lower().find(travel_data['destination'].lower()) == -1:
+        travel_data = extract(user_input)
+        Session['travel_data']=travel_data
+        collec=travel_embeddings(travel_data['destination'])
+        res=query_input(collec, user_input)
+        conv_history.append(f"System: {initial_prompt(res)}")
     #print(f"User input: {user_input}")
-    prompt=(f"Generate a detailed travel itinerary for a {details['trip_type']} in {details['destination']} "
-           f"for {details['duration']} with a {details['budget']} budget."
-           f"Include the following attractions: {res}."
-           )
-    bot_response=call_model(prompt)
+    full_prompt=build_prompt(conv_history, user_input)
+    bot_response=call_model(full_prompt)
+    conv_history.append(f"User: {user_input}\nBot: {bot_response}")
+    Session['history']=conv_history
     return jsonify({'bot_response': bot_response})
 
 if __name__ == "__main__":
