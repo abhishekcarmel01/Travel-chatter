@@ -32,7 +32,7 @@ def travel_embeddings(city):
     client = chromadb.Client()
     collection = client.create_collection(name="travel_data")
     collection.add(documents=descriptions, embeddings=embeddings)
-    return collection, travel_data
+    return collection
 
 def query_input(collection, query_text):
     query_embedding = model.encode([query_text])
