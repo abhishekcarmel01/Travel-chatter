@@ -5,6 +5,9 @@ import json
 from dotenv import load_dotenv
 import os
 from flask_session import Session
+import spacy 
+
+nlp = spacy.load("en_core_web_sm")
 
 load_dotenv()
 SECRET_KEY=os.getenv("FLASK_SECRET_KEY")
@@ -25,23 +28,9 @@ def initial_prompt(res):
            f"Include the following attractions: {res}."
            )
 def extract(user_input):
-    extract_prompt=("Extract the following details from the user's travel request: destination, budget "
-        "(e.g., 'luxury', 'budget-friendly'), duration (e.g., '5 days'), and trip type "
-        "(e.g., 'family vacation', 'adventure trip').\n"
-        "Return the output in JSON format with keys: 'destination', 'budget', 'duration', 'trip_type'.\n"
-        f"User prompt: \"{user_input}\""
-        )
-    response=call_model(extract_prompt)
-    try:
-        details = json.loads(response)
-    except Exception as e:
-        details = {
-            "destination": "Unknown",
-            "budget": "Unknown",
-            "duration": "Unknown",
-            "trip_type": "Unknown"
-        }
-    return details
+    doc=nlp(user_input)
+    dest=[ent.text for ent in doc.ents if ent.label_=="GPE"]
+    return dest[0]
 def build_prompt(conv_history,user_prompt):
     history="\n".join(conv_history)
     prompt=f"{history}\nUser: {user_prompt}\nBot:"
