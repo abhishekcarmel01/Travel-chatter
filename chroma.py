@@ -1,6 +1,8 @@
 import chromadb
+from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 from opentrip import get_place_info
+
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 def travel_embeddings(city):
@@ -24,14 +26,18 @@ def travel_embeddings(city):
 
     descriptions = [data["description"] for data in travel_data]
     embeddings = model.encode(descriptions)
+    id=[str(i) for i in range(len(descriptions))]
     # dimension = embeddings.shape[1] # 1 dimensional array
     # index = faiss.IndexFlatL2(dimension) # L2 is Euclidean distance is used
     # index.add(np.array(embeddings))
     # faiss.write_index(index, "test_travel_index.faiss")
     # return index, travel_data
-    client = chromadb.Client()
-    collection = client.create_collection(name="travel_data")
-    collection.add(documents=descriptions, embeddings=embeddings)
+    client = chromadb.Client(settings=Settings(persist_directory="./chroma_db"))
+    try:
+        collection = client.get_collection(name="travel_data")
+    except Exception as e:
+        collection = client.create_collection(name="travel_data")
+    collection.add(ids=id, documents=descriptions, embeddings=embeddings)
     return collection
 
 def query_input(collection, query_text):

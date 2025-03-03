@@ -7,3 +7,5 @@ test_travel_index.faiss
 openweather.py
 
 __pycache__/
+
+flask_session/

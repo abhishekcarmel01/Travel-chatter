@@ -3,8 +3,12 @@ import ollama
 from chroma import travel_embeddings, query_input
 import json
 from dotenv import load_dotenv
+from flask_session import Session
 import os
 import spacy 
+import logging
+
+logging.getLogger('chromadb').setLevel(logging.ERROR)
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -14,7 +18,7 @@ SECRET_KEY=os.getenv("FLASK_SECRET_KEY")
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
 app.config['SESSION_TYPE'] = 'filesystem'
-session(app)
+Session(app)
 
 @app.route('/')
 def home():
@@ -43,7 +47,7 @@ def call_model(prompt):
         return response.get("message", {}).get("content", "No response received from the model.")
     except Exception as e:
         print("Error")
-        return e
+        return str(e)
 
 @app.route('/chat', methods=['POST'])
 def chat():

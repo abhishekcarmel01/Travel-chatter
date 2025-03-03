@@ -1,44 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Assistant</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .chatbox { width: 100%; max-width: 600px; margin: auto; }
-        .chatbox input { width: 80%; padding: 10px; }
-        .chatbox button { padding: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #007BFF;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .chat-log {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #eee;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            font-size: 1em;
+        }
+
+        .chat-input button {
+            padding: 15px 20px;
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.bot {
+            text-align: left;
+        }
+
+        .message .bubble {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 80%;
+        }
+
+        .message.user .bubble {
+            background: #007BFF;
+            color: #fff;
+            border-bottom-right-radius: 0;
+        }
+
+        .message.bot .bubble {
+            background: #eee;
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
     </style>
 </head>
+
 <body>
-    <h1>AI Travel Assistant</h1>
-    <div class="chatbox">
-        <div id="chat-log">
-            <p>Welcome! Where are you planning to travel?</p>
+    <div class="chat-container">
+        <div class="chat-header">
+            AI Travel Assistant
         </div>
-        <input type="text" id="user-input" placeholder="Enter your response...">
-        <button onclick="sendMessage()">Send</button>
+        <div id="chat-log" class="chat-log">
+            <div class="message bot">
+                <div class="bubble">Welcome! Where are you planning to travel?</div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Enter your response..." autofocus>
+            <button onclick="sendMessage()">Send</button>
+        </div>
     </div>
 
     <script>
         function sendMessage() {
-            let userInput = document.getElementById("user-input").value;
-            document.getElementById("chat-log").innerHTML += "<p><strong>You:</strong> " + userInput + "</p>";
-    
+            let inputField = document.getElementById("user-input");
+            let userInput = inputField.value.trim();
+            if (!userInput) return;
+
+            appendMessage("user", userInput);
+
             fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ user_input: userInput })
             })
-            .then(response => response.json())
-            .then(data => {
-                let formattedResponse = data.bot_response.replace(/\n/g, "<br>"); 
-                document.getElementById("chat-log").innerHTML += "<p><strong>Bot:</strong><br>" + formattedResponse + "</p>";
-                document.getElementById("user-input").value = ''; 
-            });
+                .then(response => response.json())
+                .then(data => {
+                    let botResponse = data.bot_response;
+                    appendMessage("bot", botResponse);
+                    inputField.value = '';
+                    inputField.focus();
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    appendMessage("bot", "Sorry, something went wrong.");
+                });
+        }
+
+        function appendMessage(sender, text) {
+            let chatLog = document.getElementById("chat-log");
+            let messageDiv = document.createElement("div");
+            messageDiv.className = "message " + sender;
+
+            let bubble = document.createElement("div");
+            bubble.className = "bubble";
+            bubble.innerHTML = text.replace(/\n/g, "<br>");
+
+            messageDiv.appendChild(bubble);
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight;
         }
     </script>
-    
 </body>
+
 </html>
