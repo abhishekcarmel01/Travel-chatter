@@ -27,7 +27,7 @@ def home():
     return render_template('index.html')
 
 def initial_prompt(res):
-    return( "You are a travel assistant that will build travel iternaries based on user's needs"
+    return( "You are a travel assistant that will build travel itineraries based on user's needs"
            f"Include the following attractions: {res}."
            )
 
@@ -54,9 +54,12 @@ def chat():
     user_input = request.json.get("user_input")
     conv_history = session.get('history', [])
     travel_data = session.get('travel_data', [])
-
-    if not travel_data or (extract(user_input)['destination'].lower()!=travel_data['destination'].lower()):
-        travel_data = extract(user_input)
+    
+    content=extract(user_input)
+    new_dest=content['destination'].lower()
+    old_dest=travel_data['destination'].lower()
+    if new_dest!="unknown" and new_dest!=old_dest :
+        travel_data = content
         session['travel_data']=travel_data
 
     collec=travel_embeddings(travel_data['destination'])
