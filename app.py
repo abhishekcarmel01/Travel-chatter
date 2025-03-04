@@ -23,7 +23,7 @@ Session(app)
 @app.route('/')
 def home():
     session['history']=[]
-    session['travel_data']=[]
+    session['travel_data']={}
     return render_template('index.html')
 
 def initial_prompt(res):
@@ -53,12 +53,12 @@ def call_model(prompt):
 def chat():
     user_input = request.json.get("user_input")
     conv_history = session.get('history', [])
-    travel_data = session.get('travel_data', [])
+    travel_data = session.get('travel_data', {})
     
     content=extract(user_input)
-    new_dest=content['destination'].lower()
-    old_dest=travel_data['destination'].lower()
-    if new_dest!="unknown" and new_dest!=old_dest :
+    new_dest=content.get('destination',"").lower()
+    old_dest=travel_data.get('destination',"").lower()
+    if new_dest!="unknown" and new_dest!=old_dest:
         travel_data = content
         session['travel_data']=travel_data
 
